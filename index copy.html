@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motion Editor</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="body">
+
+    <canvas id="main-canvas"></canvas>
+
+    <input type="text" id="master-input" autocomplete="off" spellcheck="false" autofocus>
+
+    <div id="cursor-follower"></div>
+    <div id="rec-dot"></div>
+
+    <video id="webcam-feed" autoplay playsinline muted></video>
+    <canvas id="motion-canvas"></canvas>
+
+    <div id="ui-layer" class="absolute inset-0 flex flex-col justify-between p-6">
+        
+        <div class="flex justify-between items-start w-full pointer-events-none">
+            <div class="glass-dock control-element rounded-full flex items-center gap-3 pr-4 group cursor-pointer hover:bg-white/10 transition-colors relative">
+                <div class="relative w-6 h-6 rounded-full overflow-hidden border border-white/20">
+                    <input type="color" id="bg-picker" value="#141414" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer scale-150">
+                    <div id="color-preview" class="w-full h-full bg-[#141414]"></div>
+                </div>
+                <span class="text-[10px] uppercase tracking-widest text-white/40 font-medium">Ambience</span>
+            </div>
+
+            <div class="flex gap-2">
+                <div id="audio-status" class="glass-dock py-2 px-4 rounded-full flex items-center gap-2 opacity-0 transition-opacity">
+                    <div class="flex gap-0.5 h-3 items-end">
+                        <div id="bar-low" class="w-1 bg-blue-400/80 rounded-sm h-1 transition-all duration-75"></div>
+                        <div id="bar-mid" class="w-1 bg-purple-400/80 rounded-sm h-2 transition-all duration-75"></div>
+                        <div id="bar-high" class="w-1 bg-yellow-400/80 rounded-sm h-1 transition-all duration-75"></div>
+                    </div>
+                    <span id="audio-label" class="text-[9px] uppercase tracking-widest text-white/60 font-mono w-16 text-center">Ready</span>
+                </div>
+                <div id="cam-status" class="glass-dock py-2 px-4 rounded-full flex items-center gap-2 opacity-0 transition-opacity">
+                    <div class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                    <span id="motion-label" class="text-[9px] uppercase tracking-widest text-green-400 font-mono">Vision</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="selection-hint" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 transition-opacity duration-300">
+             <span class="glass-dock text-[10px] uppercase tracking-widest text-yellow-400/80">Mode: Selective Application</span>
+        </div>
+
+        <div class="flex flex-col items-center gap-4 w-full mb-2 pointer-events-none">
+            
+            <div class="glass-dock control-element max-w-[95vw] overflow-x-auto no-scrollbar flex items-center">
+                <span class="label-vertical">Syntax</span>
+                <button class="glass-btn w-10 h-10 text-lg italic" onclick="app.setMode('question')" title="What If?">?</button>
+                <button class="glass-btn w-10 h-10 text-lg font-bold" onclick="app.setMode('exclamation')" title="Impact">!</button>
+                <button class="glass-btn w-10 h-10 text-lg font-bold" onclick="app.setMode('period')" title="Dead Stop">.</button>
+                <button class="glass-btn w-10 h-10 text-xl" onclick="app.setMode('comma')" title="Breath">,</button>
+                <div class="divider"></div>
+                <button class="glass-btn w-10 h-10 text-lg tracking-tighter" onclick="app.setMode('ellipsis')" title="Drifting...">...</button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('parentheses')" title="Fountain">()</button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('quotes')" title="Split">""</button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('tilde')" title="Liquid">~</button>
+                <button class="glass-btn w-10 h-10 text-xl" onclick="app.setMode('asterisk')" title="Spark">*</button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('colon')" title="Pulse">:</button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('semicolon')" title="Balance">;</button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('dash')" title="Stretch">-</button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('slash')" title="Slice">/</button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('brackets')" title="Box">[]</button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('braces')" title="Embrace">{}</button>
+                <div class="divider"></div>
+                <span class="label-vertical">Voice</span>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('argument')" title="Chaos"><i class="ph ph-lightning"></i></button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('weeping')" title="Tears"><i class="ph ph-drop"></i></button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('story')" title="Fuzzy"><i class="ph ph-moon-stars"></i></button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('whisper')" title="Shy / Fear"><i class="ph ph-speaker-low"></i></button>
+                <button class="glass-btn w-10 h-10 text-lg" onclick="app.setMode('stutter')" title="Stutter"><i class="ph ph-chat-teardrop-dots"></i></button>
+            </div>
+
+            <div class="glass-dock control-element flex gap-4 items-center mt-2 px-6 py-3 rounded-full">
+                <button onclick="document.getElementById('master-input').focus()" class="glass-btn w-12 h-12 flex items-center justify-center rounded-full" title="Keyboard">
+                    <i class="ph ph-keyboard text-xl"></i>
+                </button>
+                <button onclick="app.toggleMic()" class="glass-btn w-12 h-12 flex items-center justify-center rounded-full" title="Speech Physics">
+                    <i class="ph ph-microphone text-xl" id="mic-icon"></i>
+                </button>
+                <button onclick="app.toggleWebcam()" class="glass-btn w-12 h-12 flex items-center justify-center rounded-full" title="Fluid Motion">
+                    <i class="ph ph-hand-waving text-xl"></i>
+                </button>
+                <button onclick="app.triggerAnimation()" class="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                    <i class="ph ph-play-fill text-2xl ml-1"></i>
+                </button>
+                <button onclick="app.resetAnimations()" class="glass-btn w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/20" title="Reset Motion">
+                    <i class="ph ph-arrow-counter-clockwise text-xl"></i>
+                </button>
+                <button onclick="app.clear()" class="glass-btn w-12 h-12 flex items-center justify-center rounded-full hover:text-red-400" title="Clear All">
+                    <i class="ph ph-trash text-xl"></i>
+                </button>
+                 <button onclick="app.toggleRecord()" class="glass-btn w-12 h-12 flex items-center justify-center rounded-full" title="Record">
+                    <i class="ph ph-video-camera text-xl" id="rec-icon"></i>
+                </button>
+            </div>
+             <div class="text-[9px] text-white/30 font-inter uppercase tracking-widest mt-1">
+                Type Anytime • Hold SHIFT to select
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

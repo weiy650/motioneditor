@@ -1,0 +1,78 @@
+body {
+    font-family: 'Playfair Display', serif;
+    overflow: hidden;
+    background-color: #050505;
+    color: #ffffff;
+    margin: 0;
+}
+
+#main-canvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+}
+
+#master-input {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.001;
+    background: transparent; border: none; outline: none;
+    color: transparent; cursor: text;
+    z-index: 10; 
+}
+
+#ui-layer { z-index: 50; pointer-events: none; }
+.control-element, .glass-dock, button { pointer-events: auto !important; }
+
+.glass-dock {
+    background: rgba(15, 15, 15, 0.6);
+    backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    border-radius: 24px; padding: 10px 16px;
+    transition: transform 0.3s ease;
+}
+
+.glass-btn {
+    position: relative; background: rgba(255,255,255,0.03);
+    border-radius: 8px; color: rgba(255, 255, 255, 0.6);
+    font-family: 'Inter', sans-serif; border: 1px solid transparent; cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.glass-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; transform: translateY(-2px); border-color: rgba(255,255,255,0.1); }
+.glass-btn.active { background: #fff; color: #000; box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); transform: scale(1.05); }
+
+.divider { width: 1px; height: 24px; background: rgba(255,255,255,0.15); margin: 0 12px; }
+.label-vertical {
+    writing-mode: vertical-rl; transform: rotate(180deg); font-size: 8px;
+    letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.2);
+    font-family: 'Inter', sans-serif; margin: 0 4px;
+}
+
+#cursor-follower {
+    position: fixed; width: 16px; height: 16px;
+    border: 1px solid rgba(255,255,255,0.5); border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s;
+    mix-blend-mode: difference;
+}
+body.selection-mode #cursor-follower {
+    border-color: #ffd700; background: rgba(255, 215, 0, 0.1); width: 40px; height: 40px;
+}
+
+#rec-dot {
+    position: fixed; top: 20px; right: 20px; width: 12px; height: 12px;
+    background: #ff3b30; border-radius: 50%; box-shadow: 0 0 10px #ff3b30;
+    animation: pulse 1s infinite; display: none; z-index: 100;
+}
+
+.shake-screen { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake { 
+    10%, 90% { transform: translate3d(-2px, 0, 0); } 
+    20%, 80% { transform: translate3d(4px, 0, 0); } 
+    30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 
+    40%, 60% { transform: translate3d(6px, 0, 0); } 
+}
+
+#webcam-feed, #motion-canvas { display: none; }
